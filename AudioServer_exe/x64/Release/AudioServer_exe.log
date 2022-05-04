@@ -1,0 +1,31 @@
+﻿  a2fft_server.cpp
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(17,2): warning C4091: “static ”: 没有声明变量时忽略“WebSocketStreamHeader”的左侧
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(29,2): warning C4091: “static ”: 没有声明变量时忽略“WS_FrameType”的左侧
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(137,26): warning C4244: “=”: 从“unsigned __int64”转换到“unsigned int”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(179,40): warning C4267: “=”: 从“size_t”转换到“uint32_t”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(213,12): warning C4244: “=”: 从“uint64_t”转换到“uint32_t”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(246,25): warning C4267: “=”: 从“size_t”转换到“uint32_t”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(459,67): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(573,23): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(575,16): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(692,18): warning C4018: “<”: 有符号/无符号不匹配
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(723,89): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(724,89): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(756,34): warning C4018: “<”: 有符号/无符号不匹配
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(795,17): warning C4018: “<”: 有符号/无符号不匹配
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(825,88): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\a2fft_server.cpp(826,88): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+  adv_plugin.cpp
+  audiocapture.cpp
+  AudioFFT.cpp
+  base64.cpp
+E:\ADVServer\AudioServer_exe\src\base64.cpp(88,69): warning C4267: “=”: 从“size_t”转换到“unsigned char”，可能丢失数据
+E:\ADVServer\AudioServer_exe\src\base64.cpp(105,65): warning C4267: “=”: 从“size_t”转换到“unsigned char”，可能丢失数据
+  config.cpp
+  debug.cpp
+  sha1.cpp
+  正在生成代码
+  Previous IPDB not found, fall back to full compilation.
+  All 825 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  已完成代码的生成
+  AudioServer_exe.vcxproj -> E:\ADVServer\x64\Release\AudioServer_exe.exe
