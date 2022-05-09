@@ -6,38 +6,15 @@
 #include <windows.h>
 #include <iostream>
 
-#define MAX_CHAR_LENGTH 256
-
+#define MAX_CHAR_LENGTH 512
 
 void String2TCHAR(const std::string _str, TCHAR* tchar);
 void GetInstanceFolderPath(std::string* dirPath);
 void TCHAR2Char(const TCHAR* tchar, char* _char);
 
-//调试开关
-#define DEBUG_SWITCH
-
-#ifdef DEBUG_SWITCH
-
 #include<mutex>
-
-// 日志类型: 
-// LOGGER_TYPE_FILE = 文件输出
-// LOGGER_TYPE_CONSOLE = std控制台输出
-
-#define LOGGER_TYPE_FILE 0
-#define LOGGER_TYPE_CONSOLE 1
-#define LOGGER_TYPE_NEROUT 2
-
-
-//选择日志输出方式
-#define LOGGER_TYPE LOGGER_TYPE_FILE
-
-
-#if LOGGER_TYPE==LOGGER_TYPE_FILE
-
 #include <fstream>
 
-#endif
 
 namespace debug
 {
@@ -57,25 +34,12 @@ namespace debug
 		void Log_Warn(const char* _FILE, const char* _func, const char* format);
 		void Log_Error(const char* _FILE, const char* _func, const char* format);
 		void Log_Error(const char* _FILE, const char* _func, const char* format, HRESULT code);
+		void Log_Error(const char* _FILE, const char* _func, const char* format, int code);
 		template<typename T> void Log_Base(const char* _FILE, const char* _func, LEVEL level, const char* name, T format);
 
 	private:
-#if LOGGER_TYPE ==LOGGER_TYPE_NEROUT
-
-		void Log2Ner_(LEVEL level, std::string headLog, long data);
-		void Log2Ner_(LEVEL level, std::string headLog, char* data);
-		void Log2Ner_(LEVEL level, std::string headLog, const char* data);
-		void Log2Ner_(LEVEL level, std::string headLog, std::string data);
-		void NerLog_(LEVEL level, std::string headLog, const char* sdata);
-
-#endif
-
-#if LOGGER_TYPE==LOGGER_TYPE_FILE
-
 		static const std::string sm_fileName_;
 		std::ofstream* m_outfile_;
-
-#endif
 		bool m_flag_;
 		static const LEVEL sm_maxLevel_;
 		SYSTEMTIME m_now_;
@@ -111,15 +75,7 @@ namespace debug
 			_headLog.append(name);
 			_headLog.append(": ");
 			m_logMutex_.lock();
-#if LOGGER_TYPE==LOGGER_TYPE_FILE
-
 			(*m_outfile_) << _headLog << format << std::endl;
-
-#elif LOGGER_TYPE==LOGGER_TYPE_CONSOLE
-
-			std::cout << _headLog << format << std::endl;
-
-#endif
 			m_logMutex_.unlock();
 		}
 		
@@ -132,18 +88,8 @@ namespace debug
 #define LOG_DEBUG(format) debug::LOGGER.Log_Debug(__FILE__, __func__, format)
 #define LOG_WARN(format) debug::LOGGER.Log_Warn(__FILE__, __func__, format)
 #define LOG_ERROR(format) debug::LOGGER.Log_Error(__FILE__, __func__, format)
-#define LOG_ERROR_FORMAT(format, code) debug::LOGGER.Log_Error(__FILE__, __func__, format, code)
+#define LOG_ERROR_CODE(format, code) debug::LOGGER.Log_Error(__FILE__, __func__, format, code)
 #define LOG_BASE(name, format) debug::LOGGER.Log_Base(__FILE__, __func__, debug::LEVEL::_ALL_, name, format)
 
-#else
-
-#define LOG_INIT(flag)
-#define LOG_INFO(format, ...)
-#define LOG_DEBUG(format, ...)
-#define LOG_WARN(format, ...)
-#define LOG_ERROR(format, ...)
-#define LOG_BASE(name, format)
-
-#endif // !DEBUG_SWITCH
 #endif // !DEBUG_H
 

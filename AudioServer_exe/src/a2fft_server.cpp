@@ -361,22 +361,14 @@ bool CA2FFTServer::Initial_()
 	WSADATA wsadata;
 
 	//初始化Windows Sockets DLL
-	if (WSAStartup(w_req, &wsadata) != 0) {
-		LOG_ERROR("初始化套接字库失败!");
-		exit(1);
-	}
-	else
-	{
-		LOG_INFO("初始化套接字库成功!");
+	int rcode = WSAStartup(w_req, &wsadata);
+	if (rcode != 0) {
+		LOG_ERROR_CODE("(Socket)Failed to initialize Socket", rcode);
 	}
 
 	//检测版本号
 	if (LOBYTE(wsadata.wVersion) != 2 || HIBYTE(wsadata.wHighVersion) != 2) {
-		LOG_WARN("套接字库版本号不符!");
-	}
-	else
-	{
-		LOG_INFO("套接字库版本正确!");
+		LOG_WARN("(Socket)Socket version does not match");
 	}
 
 	//创建套接字
@@ -389,42 +381,25 @@ bool CA2FFTServer::Initial_()
 
 	if (bind(m_socketServer_, (SOCKADDR*)&m_serverAddr_, sizeof(SOCKADDR)) == SOCKET_ERROR)
 	{
-		LOG_ERROR("套接字绑定失败!");
+		LOG_ERROR_CODE("(Socket)Socket binding failed", WSAGetLastError());
 		WSACleanup();
 		exit(1);
-	}
-	else
-	{
-		LOG_INFO("套接字绑定成功!");
 	}
 
 	//设置套接字为监听状态
 	if (listen(m_socketServer_, SOMAXCONN) < 0)
 	{
-		LOG_ERROR("设置监听状态失败!");
+		LOG_ERROR_CODE("(Socket)Failed to listen", WSAGetLastError());
 		WSACleanup();
 		exit(1);
 	}
-	else
-	{
-		LOG_INFO("设置监听状态成功!");
-	}
 
-	if (FAILED(sm_pAudioCapture_->Initial()))
-	{
-		LOG_ERROR("初始化CADataCapture失败!");
-		exit(1);
-	}
-	LOG_INFO("初始化CADataCapture成功!");
+	sm_pAudioCapture_->Initial();
+	LOG_INFO("CADataCapture initialized successfully");
 
-	if (sm_pAudioCapture_->StartExInitialService())
+	if (!sm_pAudioCapture_->StartExInitialService())
 	{
-		LOG_INFO("CADataCapture::ExInitial成功!");
-		return true;
-	}
-	else
-	{
-		LOG_ERROR("CADataCapture::ExInitial失败!");
+		LOG_ERROR("CADataCapture::ExInitial failed");
 		exit(1);
 	}
 }
@@ -445,7 +420,7 @@ unsigned int __stdcall CA2FFTServer::MainLoopService_(PVOID pParam)
 				(SOCKADDR*)&acceptAddr, &skAddrLength);
 			if (socketClient == SOCKET_ERROR)
 			{
-				LOG_WARN("建立连接失败!");
+				LOG_WARN("Connection failed");
 			}
 			else
 			{
@@ -465,16 +440,16 @@ unsigned int __stdcall CA2FFTServer::MainLoopService_(PVOID pParam)
 						sm_clientsMutex_.lock();
 						sm_clientsVector_.push_back(socketClient);
 						sm_clientsMutex_.unlock();
-						LOG_INFO("客户端连接成功!");
+						LOG_INFO("Client successfully connected");
 					}
 					else
 					{
-						LOG_WARN("WebSocket握手失败!");
+						LOG_WARN("WebSocket handshake failed");
 					}
 				}
 				else
 				{
-					LOG_WARN("连接时数据接受失败!");
+					LOG_WARN("Client failed to receive data");
 				}
 			}
 		}
@@ -500,7 +475,7 @@ void CA2FFTServer::SendToClients_(char* buffer)
 		if (send_len < 0)
 		{
 			//客户端断开连接
-			LOG_WARN("客户端断开连接!");
+			LOG_WARN("Client disconnected");
 			if (sm_clientNum_ == 1)
 			{
 				sm_pAudioCapture_->Stop();
@@ -695,7 +670,7 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 									{
 										sm_control_ = false;
 										sm_pAudioCapture_->sm_mutexWait.unlock();
-										LOG_ERROR("下标越界!");
+										LOG_ERROR("Index out of range");
 										exit(1);
 									}
 									
@@ -798,7 +773,7 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 								{
 									sm_control_ = false;
 									sm_pAudioCapture_->sm_mutexWait.unlock();
-									LOG_ERROR("下标越界!");
+									LOG_ERROR("Index out of range");
 									exit(1);
 								}
 								//取模
@@ -917,26 +892,20 @@ bool CA2FFTServer::StartServer()
 {
 	bool ret;
 	sm_control_ = true;
-	if (!Initial_())
+	Initial_();
+	LOG_INFO("CA2FFTServer initialized successfully");
+	if (!StartMainLoopService_())
 	{
-		LOG_ERROR("初始化失败!");
+		LOG_ERROR("Failed to start the MainLoopServicee of CA2FFTServer");
 		exit(1);
 	}
-	LOG_INFO("初始化成功!");
-	ret = StartMainLoopService_();
-	if (!ret)
+	LOG_INFO("MainLoopServicee of CA2FFTServer started");
+	if (!StartBufferSenderService_())
 	{
-		LOG_ERROR("开启主服务失败!");
+		LOG_ERROR("Failed to start the BufferSenderService of CA2FFTServer");
 		exit(1);
 	}
-	LOG_INFO("开启主服务成功!");
-	ret = StartBufferSenderService_();
-	if (!ret)
-	{
-		LOG_ERROR("开启发送服务失败!");
-		exit(1);
-	}
-	LOG_INFO("开启发送服务成功!");
+	LOG_INFO("BufferSenderService of CA2FFTServer started");
 	return true;
 }
 
@@ -946,7 +915,7 @@ bool CA2FFTServer::ExitServer()
 	DWORD _ret = WaitForSingleObject(m_bufferSenderServiceHandle_, 5000);
 	if (WAIT_OBJECT_0 != _ret)
 	{
-		LOG_WARN("强制关闭BufferSenderService");
+		LOG_WARN("Force close BufferSenderService");
 		CloseHandle(m_bufferSenderServiceHandle_);
 	}
 	sm_pAudioCapture_->Stop();

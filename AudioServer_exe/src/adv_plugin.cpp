@@ -97,13 +97,13 @@ void main_app(void)
         srv_ip = new char[17];
         ReadServerConfig(&srv_ip, &srv_port, &srv_maxconn, &srv_logger);
         LOG_INIT(srv_logger);
-        LOG_INFO("Initial CAudioDVServer!");
         LOG_BASE("Server Address", srv_ip);
         LOG_BASE("Server Port", srv_port);
         LOG_BASE("Server Maxconn", srv_maxconn);
+        LOG_INFO("Initialing ADVServer");
         audioServer = new CA2FFTServer(srv_ip, srv_port, srv_maxconn);
 
-        LOG_INFO("Start CAudioDVServer!");
+        LOG_INFO("Start ADVServer");
         audioServer->StartServer();
 
         while (!is_su_alive()) {
@@ -111,7 +111,7 @@ void main_app(void)
             Sleep(2000);
         }
         LOG_ERROR("Process \"SAO Utils\" is not found! Closing ADVServer! ");
-        LOG_INFO("Exit CAudioDVServer!");
+        LOG_INFO("Exit ADVServer!");
         audioServer->ExitServer();
         delete[] srv_ip;
         delete audioServer;
@@ -149,13 +149,13 @@ int Program_Mutex()
         }
         case ERROR_ALREADY_EXISTS:
         {
-            LOG_WARN("该应用程序已经开启");
+            LOG_WARN("The application is already open");
             nRet = 1;
             break;
         }
         default:
         {
-            LOG_ERROR("该应用程序创建互斥对象失败");
+            LOG_ERROR("The application failed to create the mutex");
             nRet = -1;
             break;
         }

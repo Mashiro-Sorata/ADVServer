@@ -1,6 +1,6 @@
 #include "../include/audiocapture.h"
 #include "../include/debug.h"
-
+#include <Functiondiscoverykeys_devpkey.h>
 
 const IID IID_IAudioCaptureClient(__uuidof(IAudioCaptureClient));
 const CLSID CLSID_MMDeviceEnumerator(__uuidof(MMDeviceEnumerator));
@@ -47,14 +47,14 @@ HRESULT CADataCapture::Initial()
 	HRESULT hr;
 	hr = CoInitialize(NULL);
 	if (RPC_E_CHANGED_MODE == hr) {
-		LOG_ERROR_FORMAT("Faild to CoInitialize", hr);
+		LOG_ERROR_CODE("Faild to CoInitialize", hr);
 		exit(1);
 	}
 
 	hr = CoCreateInstance(CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL, IID_IMMDeviceEnumerator, (void**)&m_pEnumerator_);
 
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to CoCreateInstance", hr);
+		LOG_ERROR_CODE("Faild to CoCreateInstance", hr);
 		exit(1);
 	}
 	m_pEnumerator_->RegisterEndpointNotificationCallback(this);
@@ -62,7 +62,7 @@ HRESULT CADataCapture::Initial()
 	// get default output audio endpoint
 	hr = m_pEnumerator_->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_pDevice_);
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to GetDefaultAudioEndpoint", hr);
+		LOG_ERROR_CODE("Faild to GetDefaultAudioEndpoint", hr);
 		exit(1);
 	}
 
@@ -73,17 +73,23 @@ HRESULT CADataCapture::ExInitial_()
 {
 	HRESULT hr;
 
+	hr = CoInitialize(NULL);
+	if (RPC_E_CHANGED_MODE == hr) {
+		LOG_ERROR_CODE("Faild to CoInitialize", hr);
+		exit(1);
+	}
+
 	// activates device
 	hr = m_pDevice_->Activate(IID_IAudioClient, CLSCTX_ALL, NULL, (void**)&m_pAudioClient_);
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to Activate Decive", hr);
+		LOG_ERROR_CODE("Faild to Activate Decive", hr);
 		exit(1);
 	}
 
 	// gets audio format
 	hr = m_pAudioClient_->GetMixFormat(&m_pwfx_);
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to GetMixFormat", hr);
+		LOG_ERROR_CODE("Faild to GetMixFormat", hr);
 		exit(1);
 	}
 	/*printf("\nGetMixFormat...\n");
@@ -97,13 +103,13 @@ HRESULT CADataCapture::ExInitial_()
 	
 	hr = m_pAudioClient_->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, REFTIMES_PER_SEC, 0, m_pwfx_, NULL);
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to Initialize Audio Client", hr);
+		LOG_ERROR_CODE("Faild to Initialize Audio Client", hr);
 		exit(1);
 	}
 
 	hr = m_pAudioClient_->GetService(IID_IAudioCaptureClient, (void**)&m_pCaptureClient_);
 	if (FAILED(hr)) {
-		LOG_ERROR_FORMAT("Faild to GetService", hr);
+		LOG_ERROR_CODE("Faild to GetService", hr);
 		exit(1);
 	}
 	return S_OK;
@@ -129,7 +135,7 @@ HRESULT CADataCapture::Start()
 	HRESULT hr = m_pAudioClient_->Start();
 	if (FAILED(hr))
 	{
-		LOG_ERROR_FORMAT("Failed to Start", hr);
+		LOG_ERROR_CODE("Failed to Start", hr);
 		exit(1);
 	}
 	m_start_ = true;
@@ -141,7 +147,7 @@ HRESULT CADataCapture::Stop()
 	 HRESULT hr = m_pAudioClient_->Stop();
 	if (FAILED(hr))
 	{
-		LOG_ERROR_FORMAT("Failed to Stop", hr);
+		LOG_ERROR_CODE("Failed to Stop", hr);
 		exit(1);
 	}
 	m_start_ = false;
@@ -155,7 +161,7 @@ HRESULT CADataCapture::Reset()
 	hr = m_pAudioClient_->Reset();
 	if (FAILED(hr))
 	{
-		LOG_ERROR_FORMAT("Failed to Reset", hr);
+		LOG_ERROR_CODE("Failed to Reset", hr);
 		exit(1);
 	}
 	if(_start)
@@ -272,19 +278,47 @@ HRESULT STDMETHODCALLTYPE CADataCapture::OnDefaultDeviceChanged(
 			return S_OK;
 		}
 	}
-	LOG_INFO("Device Changed!");
+	//LOG_INFO("Device Changed!");
 	m_changing_ = true;
 	sm_mutexWait.lock();
+
+	char before_device[MAX_CHAR_LENGTH/2] = "Unknow";
+	char after_device[MAX_CHAR_LENGTH/2] = "Unknow";
+
+	IPropertyStore* pProperties = NULL;
+	PROPVARIANT varName;
+	PropVariantInit(&varName);
+	HRESULT hr = m_pDevice_->OpenPropertyStore(STGM_READ, &pProperties);
+	if (hr == S_OK) 
+	{
+		hr = pProperties->GetValue(PKEY_Device_FriendlyName, &varName);
+		TCHAR2Char(varName.pwszVal, before_device);
+	}
 	
 	m_pDevice_->Release();
-	HRESULT hr = m_pEnumerator_->GetDevice(pwstrDefaultDeviceId, &m_pDevice_);
+	hr = m_pEnumerator_->GetDevice(pwstrDefaultDeviceId, &m_pDevice_);
 	if (FAILED(hr))
 	{
-		LOG_ERROR_FORMAT("GetDevice Error!", hr);
+		LOG_ERROR_CODE("GetDevice Error", hr);
 		m_changing_ = false;
 		sm_mutexWait.unlock();
 		exit(1);
 	}
+
+	hr = m_pDevice_->OpenPropertyStore(STGM_READ, &pProperties);
+	if (hr == S_OK)
+	{
+		hr = pProperties->GetValue(PKEY_Device_FriendlyName, &varName);
+		TCHAR2Char(varName.pwszVal, after_device);
+	}
+
+	char targetString[MAX_CHAR_LENGTH];
+	snprintf(targetString,
+		sizeof(targetString),
+		"Device Changed:{%s}->{%s}",
+		before_device,
+		after_device);
+	LOG_INFO(targetString);
 
 	ReStart();
 	sm_mutexWait.unlock();
