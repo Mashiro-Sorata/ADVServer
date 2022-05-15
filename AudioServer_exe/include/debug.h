@@ -54,7 +54,10 @@ namespace debug
 			GetLocalTime(&m_now_);
 			char sdata[5];
 			std::string _headLog;
-			_headLog.append("<");
+			_headLog.append("[");
+			_headLog.append(name);
+			_headLog.append("]");
+			_headLog.append(" ");
 			_itoa_s(m_now_.wHour, sdata, 10);
 			_headLog.append(2 - strlen(sdata), '0');
 			_headLog.append(sdata);
@@ -66,14 +69,12 @@ namespace debug
 			_itoa_s(m_now_.wSecond, sdata, 10);
 			_headLog.append(2 - strlen(sdata), '0');
 			_headLog.append(sdata);
-			_headLog.append(">");
-			_headLog.append("[");
+			_headLog.append(" ");
+			_headLog.append("<");
 			_headLog.append(_FILE);
-			_headLog.append("](Function: ");
+			_headLog.append("(");
 			_headLog.append(_func);
-			_headLog.append(")>>>>");
-			_headLog.append(name);
-			_headLog.append(": ");
+			_headLog.append(")>: ");
 			m_logMutex_.lock();
 			(*m_outfile_) << _headLog << format << std::endl;
 			m_logMutex_.unlock();
@@ -83,13 +84,15 @@ namespace debug
 	extern CLogger LOGGER;
 }
 
+#define filename(x) strrchr(x,'\\')?strrchr(x,'\\')+1:x
+
 #define LOG_INIT(_flag) debug::LOGGER.Initial(_flag)
-#define LOG_INFO(format) debug::LOGGER.Log_Info(__FILE__, __func__, format)
-#define LOG_DEBUG(format) debug::LOGGER.Log_Debug(__FILE__, __func__, format)
-#define LOG_WARN(format) debug::LOGGER.Log_Warn(__FILE__, __func__, format)
-#define LOG_ERROR(format) debug::LOGGER.Log_Error(__FILE__, __func__, format)
-#define LOG_ERROR_CODE(format, code) debug::LOGGER.Log_Error(__FILE__, __func__, format, code)
-#define LOG_BASE(name, format) debug::LOGGER.Log_Base(__FILE__, __func__, debug::LEVEL::_ALL_, name, format)
+#define LOG_INFO(format) debug::LOGGER.Log_Info(filename(__FILE__), __func__, format)
+#define LOG_DEBUG(format) debug::LOGGER.Log_Debug(filename(__FILE__), __func__, format)
+#define LOG_WARN(format) debug::LOGGER.Log_Warn(filename(__FILE__), __func__, format)
+#define LOG_ERROR(format) debug::LOGGER.Log_Error(filename(__FILE__), __func__, format)
+#define LOG_ERROR_CODE(format, code) debug::LOGGER.Log_Error(filename(__FILE__), __func__, format, code)
+#define LOG_BASE(name, format) debug::LOGGER.Log_Base(filename(__FILE__), __func__, debug::LEVEL::_ALL_, name, format)
 
 #endif // !DEBUG_H
 

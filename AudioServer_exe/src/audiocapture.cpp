@@ -59,13 +59,6 @@ HRESULT CADataCapture::Initial()
 	}
 	m_pEnumerator_->RegisterEndpointNotificationCallback(this);
 
-	// get default output audio endpoint
-	hr = m_pEnumerator_->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_pDevice_);
-	if (FAILED(hr)) {
-		LOG_ERROR_CODE("Faild to GetDefaultAudioEndpoint", hr);
-		exit(1);
-	}
-
 	return S_OK;
 }
 
@@ -76,6 +69,13 @@ HRESULT CADataCapture::ExInitial_()
 	hr = CoInitialize(NULL);
 	if (RPC_E_CHANGED_MODE == hr) {
 		LOG_ERROR_CODE("Faild to CoInitialize", hr);
+		exit(1);
+	}
+
+	// get default output audio endpoint
+	hr = m_pEnumerator_->GetDefaultAudioEndpoint(eRender, eMultimedia, &m_pDevice_);
+	if (FAILED(hr)) {
+		LOG_ERROR_CODE("Faild to GetDefaultAudioEndpoint", hr);
 		exit(1);
 	}
 
@@ -171,23 +171,17 @@ HRESULT CADataCapture::Reset()
 
 HRESULT CADataCapture::GetNextPacketSize()
 {
-	HRESULT hr;
-	hr = m_pCaptureClient_->GetNextPacketSize(&m_packetLength_);
-	return hr;
+	return m_pCaptureClient_->GetNextPacketSize(&m_packetLength_);
 }
 
 HRESULT CADataCapture::GetBuffer(float** dataBuff)
 {
-	HRESULT hr;
-	hr = m_pCaptureClient_->GetBuffer((BYTE**)dataBuff, &m_numFramesAvailable_, &m_flags_, NULL, NULL);
-	return hr;
+	return m_pCaptureClient_->GetBuffer((BYTE**)dataBuff, &m_numFramesAvailable_, &m_flags_, NULL, NULL);
 }
 
 HRESULT CADataCapture::ReleaseBuffer()
 {
-	HRESULT hr;
-	hr = m_pCaptureClient_->ReleaseBuffer(m_numFramesAvailable_);
-	return hr;
+	return m_pCaptureClient_->ReleaseBuffer(m_numFramesAvailable_);
 }
 
 bool CADataCapture::IsChanging()

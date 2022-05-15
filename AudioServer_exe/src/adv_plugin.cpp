@@ -97,9 +97,13 @@ void main_app(void)
         srv_ip = new char[17];
         ReadServerConfig(&srv_ip, &srv_port, &srv_maxconn, &srv_logger);
         LOG_INIT(srv_logger);
-        LOG_BASE("Server Address", srv_ip);
-        LOG_BASE("Server Port", srv_port);
-        LOG_BASE("Server Maxconn", srv_maxconn);
+        char targetString[50];
+        snprintf(targetString, sizeof(targetString), "Address: %s", srv_ip);
+        LOG_INFO(targetString);
+        snprintf(targetString, sizeof(targetString), "Port: %d", srv_port);
+        LOG_INFO(targetString);
+        snprintf(targetString, sizeof(targetString), "Maxconn: %d", srv_maxconn);
+        LOG_INFO(targetString);
         LOG_INFO("Initialing ADVServer");
         audioServer = new CA2FFTServer(srv_ip, srv_port, srv_maxconn);
 
@@ -107,7 +111,6 @@ void main_app(void)
         audioServer->StartServer();
 
         while (!is_su_alive()) {
-        //while(TRUE) {
             Sleep(2000);
         }
         LOG_ERROR("Process \"SAO Utils\" is not found! Closing ADVServer! ");

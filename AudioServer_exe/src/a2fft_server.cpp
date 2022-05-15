@@ -613,8 +613,19 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 		if ((sm_clientNum_ > 0) && (!sm_pAudioCapture_->IsChanging()))
 		{
 			sm_pAudioCapture_->sm_mutexWait.lock();
-			sm_pAudioCapture_->GetNextPacketSize();
-			if (0 != sm_pAudioCapture_->GetPacketLength())
+			hr = sm_pAudioCapture_->GetNextPacketSize();
+			if (FAILED(hr)) 
+			{
+				char targetString[1024];
+				snprintf(targetString,
+					sizeof(targetString),
+					"%s(0x%.8X)",
+					"Failed to GetNextPacketSize",
+					hr);
+				LOG_WARN(targetString);
+				sm_pAudioCapture_->ReStart();
+			}
+			else if (0 != sm_pAudioCapture_->GetPacketLength())
 			{
 				//Sleep(wrk_Interval);
 				hr = sm_pAudioCapture_->GetBuffer(&pfData);
@@ -859,12 +870,24 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 							LOG_WARN("E_POINTER(参数ppData,pNumFramesToRead或pdwFlags为NULL)");
 							break;
 						default:
-							LOG_WARN("E_UNKNOW(获取数据缓冲区时发生未知错误)");
+							char targetString[1024];
+							snprintf(targetString,
+								sizeof(targetString),
+								"%s(0x%.8X)",
+								"E_UNKNOW",
+								hr);
+							LOG_WARN(targetString);
+							break;
 						}
 					}
 					Sleep(sm_Interval);
 				}
-				sm_pAudioCapture_->ReleaseBuffer();
+				hr = sm_pAudioCapture_->ReleaseBuffer();
+				if (FAILED(hr))
+				{
+					LOG_ERROR_CODE("Failed to ReleaseBuffer", hr);
+					exit(1);
+				}
 				pfData = NULL;
 			}
 			else
