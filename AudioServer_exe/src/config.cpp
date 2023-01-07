@@ -50,3 +50,20 @@ void ReadFFTConfig(int* fftAttack, int* fftDecay, int* normalizeSpeed, int* peak
     *changeSpeed = GetPrivateProfileInt(NVG_TEXT("fft"), NVG_TEXT("changeSpeed"), 20, wdirPath);
 }
 
+//void ReadAdvancedConfig(bool* device_reboot)
+//{
+//    std::string dirPath;
+//    GetInstanceFolderPath(&dirPath);
+//    TCHAR wdirPath[MAX_PATH];
+//    TCHAR w_temp[17];
+//    String2TCHAR(dirPath + CONFIGFILE, wdirPath);
+//    GetPrivateProfileString(NVG_TEXT("advanced"), NVG_TEXT("device_reboot"), NVG_TEXT("true"), w_temp, 17, wdirPath);
+//    if (lstrcmpi(NVG_TEXT("true"), w_temp))
+//    {
+//        *device_reboot = false;
+//    }
+//    else
+//    {
+//        *device_reboot = true;
+//    }
+//}

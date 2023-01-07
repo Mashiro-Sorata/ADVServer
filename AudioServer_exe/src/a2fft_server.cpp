@@ -605,6 +605,10 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 		}
 	}
 
+	u_short paused_times = 0;
+	u_short paused_flag = 1000 / fps / sm_Interval;
+	paused_flag = (paused_flag > 3) ? paused_flag : 4;
+
 	//循环更新数据后发送的操作
 	HRESULT hr = S_OK;
 	while (sm_control_)
@@ -623,10 +627,17 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 					"Failed to GetNextPacketSize",
 					hr);
 				LOG_WARN(targetString);
-				sm_pAudioCapture_->ReStart();
+				exit(1);
+				/*if (!sm_pAudioCapture_->ReStart()) {
+					LOG_ERROR("Failed to ReStart!");
+					exit(1);
+				}*/
 			}
 			else if (0 != sm_pAudioCapture_->GetPacketLength())
 			{
+				if (paused_times > 0) {
+					paused_times = 0;
+				}
 				//Sleep(wrk_Interval);
 				hr = sm_pAudioCapture_->GetBuffer(&pfData);
 				if (!FAILED(hr))
@@ -892,6 +903,19 @@ unsigned int __stdcall CA2FFTServer::BufferSenderService_(PVOID pParam)
 			}
 			else
 			{
+				//数据更新速率>=18fps
+				if (paused_times == paused_flag) {
+					for (iBin = 0; iBin < 128; ++iBin)
+					{
+						sm_pSendBuffer_[iBin] = 0.0f;
+					}
+					sm_pSendBuffer_[128] = 1;
+					((CA2FFTServer*)pParam)->SendToClients_((char*)sm_pSendBuffer_);
+					paused_times++;
+				}
+				else if(paused_times < paused_flag) {
+					paused_times++;
+				}
 				Sleep(sm_Interval);
 			}
 			sm_pAudioCapture_->sm_mutexWait.unlock();

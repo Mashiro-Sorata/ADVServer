@@ -1,5 +1,6 @@
 #include "../include/audiocapture.h"
 #include "../include/debug.h"
+//#include "../include/config.h"
 #include <Functiondiscoverykeys_devpkey.h>
 
 const IID IID_IAudioCaptureClient(__uuidof(IAudioCaptureClient));
@@ -273,6 +274,13 @@ HRESULT STDMETHODCALLTYPE CADataCapture::OnDefaultDeviceChanged(
 		}
 	}
 	//LOG_INFO("Device Changed!");
+	//bool device_reboot_flag;
+	//ReadAdvancedConfig(&device_reboot_flag);
+	//if (device_reboot_flag)
+	//{
+	//	LOG_INFO("Exit on device changed!");
+	//	exit(0);
+	//}
 	m_changing_ = true;
 	sm_mutexWait.lock();
 
