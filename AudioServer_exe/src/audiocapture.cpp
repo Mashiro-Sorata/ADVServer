@@ -1,6 +1,6 @@
 #include "../include/audiocapture.h"
 #include "../include/debug.h"
-//#include "../include/config.h"
+#include "../include/config.h"
 #include <Functiondiscoverykeys_devpkey.h>
 
 const IID IID_IAudioCaptureClient(__uuidof(IAudioCaptureClient));
@@ -104,8 +104,18 @@ HRESULT CADataCapture::ExInitial_()
 	
 	hr = m_pAudioClient_->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, REFTIMES_PER_SEC, 0, m_pwfx_, NULL);
 	if (FAILED(hr)) {
-		LOG_ERROR_CODE("Faild to Initialize Audio Client", hr);
-		exit(1);
+		// Compatibility with the Nahimic audio driver
+		// https://social.msdn.microsoft.com/Forums/windowsdesktop/en-US/bd8cd9f2-974f-4a9f-8e9c-e83001819942/iaudioclient-initialize-failure
+		LOG_WARN("Faild to Initialize Audio Client");
+		m_pwfx_->nChannels = 2;
+		m_pwfx_->nBlockAlign = (2 * m_pwfx_->wBitsPerSample) / 8;
+		m_pwfx_->nAvgBytesPerSec = m_pwfx_->nSamplesPerSec * m_pwfx_->nBlockAlign;
+		hr = m_pAudioClient_->Initialize(AUDCLNT_SHAREMODE_SHARED, AUDCLNT_STREAMFLAGS_LOOPBACK, REFTIMES_PER_SEC, 0, m_pwfx_, NULL);
+		if (FAILED(hr)) {
+			// stereo waveformat didnt work either, throw an error
+			LOG_ERROR_CODE("Faild to Initialize Audio Client", hr);
+			exit(1);
+		}
 	}
 
 	hr = m_pAudioClient_->GetService(IID_IAudioCaptureClient, (void**)&m_pCaptureClient_);
@@ -274,13 +284,13 @@ HRESULT STDMETHODCALLTYPE CADataCapture::OnDefaultDeviceChanged(
 		}
 	}
 	//LOG_INFO("Device Changed!");
-	//bool device_reboot_flag;
-	//ReadAdvancedConfig(&device_reboot_flag);
-	//if (device_reboot_flag)
-	//{
-	//	LOG_INFO("Exit on device changed!");
-	//	exit(0);
-	//}
+	bool device_reboot_flag = false;
+	ReadAdvancedConfig(&device_reboot_flag);
+	if (device_reboot_flag)
+	{
+		LOG_INFO("Exit on device changed!");
+		exit(0);
+	}
 	m_changing_ = true;
 	sm_mutexWait.lock();
 

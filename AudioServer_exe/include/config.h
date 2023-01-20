@@ -8,7 +8,7 @@
 
 void ReadServerConfig(char** _ip, unsigned short* _port, int* _maxClient, bool* _logger);
 void ReadFFTConfig(int* fftAttack, int* fftDecay, int* normalizeSpeed, int* peakthr, int* fps, int* changeSpeed);
-//void ReadAdvancedConfig(bool* device_reboot);
+void ReadAdvancedConfig(bool* device_reboot);
 
 
 #endif // !CONFIG_H
